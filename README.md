@@ -1,7 +1,8 @@
 # AwesomeApp rust-web-app
+This is a simple web application built with Rust, using the Axum-web framework and PostgreSQL as the database. 
+It serves as a starting point for building more complex applications.
 
-More info at: https://awesomeapp.dev/rust-web-app/
-
+Based on:
 - rust-web-app YouTube episodes:
 	- [Episode 01 - Rust Web App - Course to Production Coding](https://youtube.com/watch?v=3cA_mk4vdWY&list=PL7r-PXl6ZPcCIOFaL7nVHXZvBmHNhrh_Q)
 - Related videos: 
@@ -28,7 +29,7 @@ ALTER DATABASE postgres SET log_statement = 'all';
 
 ```sh
 # Terminal 1 - To run the server.
-cargo watch -q -c -w src/ -x "run"
+cargo watch -q -c -w src/ -w .cargo/ -x "run"
 
 # Terminal 2 - To run the quick_dev.
 cargo watch -q -c -w examples/ -x "run --example quick_dev"
