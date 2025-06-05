@@ -1,8 +1,8 @@
-use sqlb::HasFields;
 use crate::ctx::Ctx;
 use crate::model::task::Task;
 use crate::model::ModelManager;
 use crate::model::{Error, Result};
+use sqlb::HasFields;
 use sqlx::postgres::PgRow;
 use sqlx::FromRow;
 
@@ -10,6 +10,22 @@ pub trait DbBmc {
 	const TABLE: &'static str;
 }
 
+pub async fn create<MC, E>(_ctx: &Ctx, mm: &ModelManager, data: E) -> Result<i64>
+where
+	MC: DbBmc,
+	E: HasFields,
+{
+	let db = mm.db();
+
+	let fields = data.not_none_fields();
+	let (id,) = sqlb::insert()
+		.table(MC::TABLE)
+		.data(fields)
+		.returning(&["id"])
+		.fetch_one::<_, (i64,)>(db)
+		.await?;
+	Ok(id)
+}
 // MC for model controller, E for entity
 pub async fn get<MC, E>(_ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<E>
 where
@@ -72,4 +88,33 @@ where
 	}
 
 	Ok(true)
+}
+pub async fn update<MC, E>(
+	_ctx: &Ctx,
+	mm: &ModelManager,
+	id: i64,
+	data: E,
+) -> Result<()>
+where
+	MC: DbBmc,
+	E: HasFields,
+{
+	let db = mm.db();
+
+	let fields = data.not_none_fields();
+	let count = sqlb::update()
+		.table(MC::TABLE)
+		.and_where("id", "=", id)
+		.data(fields)
+		.exec(db)
+		.await?;
+	if count == 0 { 
+		Err(Error::EntityNotFound {
+			entity: MC::TABLE,
+			id,
+		})
+	} else {
+		Ok(())
+	}
+	
 }

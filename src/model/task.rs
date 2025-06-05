@@ -16,12 +16,12 @@ pub struct Task {
 	pub desc: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Fields, Deserialize)]
 pub struct TaskForCreate {
 	pub title: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Fields, Deserialize)]
 pub struct TaskForUpdate {
 	pub title: Option<String>,
 }
@@ -33,29 +33,31 @@ impl DbBmc for TaskBmc {
 }
 impl TaskBmc {
 	pub async fn create(
-		_ctx: &Ctx,
+		ctx: &Ctx,
 		mm: &ModelManager,
 		task_c: TaskForCreate,
 	) -> Result<i64> {
-		let db = mm.db();
-		let (id,) = sqlx::query_as::<_, (i64,)>(
-			"INSERT INTO task (title) VALUES ($1) returning id",
-		)
-		.bind(task_c.title)
-		.fetch_one(db)
-		.await?;
-		Ok(id)
+		base::create::<Self, _>(ctx, mm, task_c).await
 	}
 	pub async fn get(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<Task> {
 		base::get::<Self, _>(ctx, mm, id).await
 	}
 
-	pub async fn list(_ctx: &Ctx, mm: &ModelManager) -> Result<Vec<Task>> {
-		base::list::<Self, _>(_ctx, mm).await
+	pub async fn list(ctx: &Ctx, mm: &ModelManager) -> Result<Vec<Task>> {
+		base::list::<Self, _>(ctx, mm).await
 	}
 
-	pub async fn delete(_ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<bool> {
-		base::delete::<Self, Task>(_ctx, mm, id).await
+	pub async fn delete(ctx: &Ctx, mm: &ModelManager, id: i64) -> Result<bool> {
+		base::delete::<Self, Task>(ctx, mm, id).await
+	}
+
+	pub async fn update(
+		ctx: &Ctx,
+		mm: &ModelManager,
+		id: i64,
+		task_u: TaskForUpdate,
+	) -> Result<()> {
+		base::update::<Self, _>(ctx, mm, id, task_u).await
 	}
 }
 
@@ -128,6 +130,32 @@ mod tests {
 		for task in tasks {
 			TaskBmc::delete(&ctx, &mm, task.id).await?;
 		}
+		Ok(())
+	}
+
+	#[serial]
+	#[tokio::test]
+	async fn test_update_ok() -> Result<()> {
+		let mm = _dev_utils::init_test().await;
+		let ctx = Ctx::root_ctx();
+		let fx_title = "test_update_ok - task 01";
+		let fx_title_new = "test_update_ok - task 01 - new";
+		let fx_task = _dev_utils::seed_tasks(&ctx, &mm, &[fx_title])
+			.await?
+			.remove(0);
+
+		TaskBmc::update(
+			&ctx,
+			&mm,
+			fx_task.id,
+			TaskForUpdate {
+				title: Some(fx_title_new.to_string()),
+			},
+		)
+		.await?;
+
+		let task = TaskBmc::get(&ctx, &mm, fx_task.id).await?;
+		assert_eq!(task.title, fx_title_new);
 		Ok(())
 	}
 
