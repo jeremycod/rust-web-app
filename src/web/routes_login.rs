@@ -1,15 +1,18 @@
 use crate::web::{self, Error, Result};
-use serde::Deserialize;
-use axum::{Json, Router};
 use axum::routing::post;
-use serde_json::{Value, json};
+use axum::{Json, Router};
+use serde::Deserialize;
+use serde_json::{json, Value};
 use tower_cookies::{Cookie, Cookies};
 use tracing::debug;
 
 pub fn routes() -> Router {
 	Router::new().route("/api/login", post(api_login))
 }
-async fn api_login(cookies: Cookies, payload: Json<LoginPayload>) -> Result<Json<Value>>{
+async fn api_login(
+	cookies: Cookies,
+	payload: Json<LoginPayload>,
+) -> Result<Json<Value>> {
 	debug!(" {:<12} - api_login", "HANDLER");
 	if payload.username != "demo1" || payload.pwd != "welcome" {
 		return Err(Error::LoginFail);
@@ -19,15 +22,15 @@ async fn api_login(cookies: Cookies, payload: Json<LoginPayload>) -> Result<Json
 
 	// Create the success body
 	let body = Json(json!({
-        "result": {
-            "success": true
-        }
-    }));
+		"result": {
+			"success": true
+		}
+	}));
 	Ok(body)
 }
 
 #[derive(Debug, Deserialize)]
 struct LoginPayload {
 	username: String,
-	pwd: String
+	pwd: String,
 }

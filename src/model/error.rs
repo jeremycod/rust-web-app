@@ -1,5 +1,5 @@
-use serde::Serialize;
 use crate::model::store;
+use serde::Serialize;
 use serde_with::{serde_as, DisplayFromStr};
 
 pub type Result<T> = core::result::Result<T, Error>;
@@ -9,7 +9,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 pub enum Error {
 	// -- moxulsz
 	Store(store::Error),
-	EntityNotFound{ entity: &'static str, id: i64 },
+	EntityNotFound { entity: &'static str, id: i64 },
 	// -- Externals
 	Sqlx(#[serde_as(as = "DisplayFromStr")] sqlx::Error),
 }

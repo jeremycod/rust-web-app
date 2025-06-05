@@ -1,4 +1,3 @@
-use std::future::Future;
 use crate::ctx::Ctx;
 use crate::model::ModelManager;
 use crate::web::AUTH_TOKEN;
@@ -10,9 +9,10 @@ use axum::http::request::Parts;
 use axum::http::Request;
 use axum::middleware::Next;
 use axum::response::Response;
-use serde::Serialize;
-use tower_cookies::{Cookie, Cookies};
 use log::debug;
+use serde::Serialize;
+use std::future::Future;
+use tower_cookies::{Cookie, Cookies};
 
 #[allow(dead_code)] // For now, until we have the rpc.
 pub async fn mw_ctx_require<B>(
@@ -32,8 +32,7 @@ pub async fn mw_ctx_resolve(
 	cookies: Cookies,
 	mut req: Request<Body>,
 	next: Next,
-) -> Result<Response>
-{
+) -> Result<Response> {
 	debug!(" {:<12} - mw_ctx_resolve", "MIDDLEWARE");
 
 	let auth_token = cookies.get(AUTH_TOKEN).map(|c| c.value().to_string());
