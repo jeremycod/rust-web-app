@@ -52,7 +52,7 @@ async fn pexec(db: &Db, file: &str) -> Result<(), sqlx::Error> {
 	let content = fs::read_to_string(file)?;
 
 	// FIXME
-	let sqls: Vec<&str> = content.split('\n').collect();
+	let sqls: Vec<&str> = content.split(';').collect();
 
 	for sql in sqls {
 		sqlx::query(sql).execute(db).await?;
